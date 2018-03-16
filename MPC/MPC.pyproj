@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b0ba35f9-798f-4c57-a52b-493b13bcf762</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MPC.py</StartupFile>
+    <StartupFile>MC_numpy\MC_numpy.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +21,25 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MPC.py" />
+    <Compile Include="c_c_stretcher.py" />
+    <Compile Include="BaseMC\BaseMC.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HelperUtils\HelperUtils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MCSparse\MC_sparse.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MC_numpy\MC_numpy.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BaseMC\" />
+    <Folder Include="MC_numpy\" />
+    <Folder Include="HelperUtils\" />
+    <Folder Include="MCSparse\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
