@@ -26,7 +26,8 @@ class BaseMC(object):
   """
 
 #-----------
-  def __init__(self, expand_power = 2, inflate_power = 2, max_iter = 10, threshold = 0.00001, tol = 0.001):
+  def __init__(self, diag_scale = 1.0, expand_power = 2, inflate_power = 2, 
+               max_iter = 10, threshold = 0.00001, tol = 0.001):
     """
     Initialises an instance of the Markoc cluster algorithm
     Parameters:
@@ -67,6 +68,8 @@ class BaseMC(object):
                     'threshold' : self.threshold,
                     'tol' : self.tol}
 
+    self._labels_ = None
+
   @property
   def diag_scale(self):
     return self._diag_scale
@@ -90,6 +93,10 @@ class BaseMC(object):
   @property
   def tol(self):
     return self._tol
+
+  @property
+  def labels_(self):
+    return self._labels_
 
 #-----------
   def get_params(self):
@@ -129,9 +136,19 @@ class BaseMC(object):
       X (np.ndarray[n_nodes, n_nodes]) : 2D connectivity matrix
     """
 
-    raise NotImplementedError("Fit has not been implemented in base class")
+    raise NotImplementedError("fit() is not implemented in base class")
 
+#----------
+  def fit_predict(self, X):
+    """
+    Fits clusters to the graph using Markov cluster algorithm.
+    Parameters:
+      X (np.ndarray[n_nodes, n_nodes]) : 2D connectivity matrix
+    Returns:
+      self.labels_ (np.ndarray[X.shape[0]]) : index of cluster to which a node belongs to     
+    """
 
+    raise NotImplementedError("fit_predict() is not implemented in base class")
 
 
 

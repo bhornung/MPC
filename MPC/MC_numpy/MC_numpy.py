@@ -100,6 +100,21 @@ def _collect_clusters(X):
   return clusters
 
 #-----------------------
+def _cull(X, threshold):
+  """
+  Sets elements below a thershold to zero
+  Parameters:
+    X (np.ndarray[n_nodes, n_nodes]) : 2D array
+    threshold (float) : elements below this value are set to zero.
+  """
+
+  X[X < threshold] = 0.0
+
+  X = _row_normalise(X)
+
+  return X
+
+#-----------------------
 def _expand(X, expand_power):
   """
   Raises a square matrix to the expand_power-th power
@@ -153,7 +168,7 @@ def _init_matrix(X, diag_scale):
   return X
 
 #---------------------
-def _markov_cluster(X, expand_power, inflate_power, max_iter, tol):
+def _markov_cluster(X, expand_power, inflate_power, max_iter, tol, threshold):
   """
   Performs maximum max_iter number Markov cluster cycles.
   Parameters:
@@ -169,6 +184,7 @@ def _markov_cluster(X, expand_power, inflate_power, max_iter, tol):
     X = _inflate(X, inflate_power)
     X = _row_normalise(X)
     X = _expand(X, expand_power)
+    X = _cull(X, threshold)
 
 # check whether the attractors a converged
     avg_col_var = _calc_nnz_L1_column_variance(X)
@@ -194,18 +210,55 @@ def _row_normalise(X):
 
   return X
 
-
+#------------------------
 class MCnumpy(BaseMC):
   """
   Native numpy implementation of the Markov Cluster algorithm.
   """
 
 #-----------------------
-  def __init__(self, *args, **kwargs):
+  def __init__(self, diag_scale = 1.0, expand_power = 2, inflate_power = 2, 
+               max_iter = 10, threshold = 0.00001, tol = 0.001):
 
-# --- fall back to parent implementation
     self.__doc__ = super().__doc__ # sorry I am lazy
-    super().__init__(*args, **kwargs)
 
+# --- invoke parent initialisation
+    super().__init__(diag_scale = diag_scale, 
+                     expand_power = expand_power, inflate_power = inflate_power,
+                     max_iter = max_iter, threshold = threshold, tol = tol)
 
-# to do fill in rest ...
+#------------------------
+  def fit(self, X):
+    """
+    Clusters a graph using Markov cluster algorithm.
+    Parameters:
+      X (np.ndarray[n_nodes, n_nodes]): 2D connectivity matrix
+    """
+
+# --- create transition probability matrix
+    X_ = _init_matrix(X, self.diag_scale)
+
+# --- perform clustering
+    _markov_cluster(X_, self.expand_power, self.inflate_power, 
+                    self.max_iter, self.tol, self.threshold)
+
+# assign labels
+    clusters = _collect_clusters(X_)
+    self._labels_ = np.zeros(X_shape[0], dtype = np.int)
+
+    for _cluster_id, _cluster_members in clusters.items():
+      self._labels_[_cluster_members] = _cluster_id
+
+    return self
+
+#------------------------
+  def fit_predict(X):
+    """
+    Fits the graph with clusters and returns the cluster labels.
+    Parameters:
+      X (np.ndarray[n_nodes, n_nodes]): 2D connectivity matrix
+    Returns:
+      self.labels_ (np.ndarray[X.shape[0]]) : index of cluster to which a node belongs to.
+    """
+
+    return self.fit(X).labels_
