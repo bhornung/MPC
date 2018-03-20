@@ -18,6 +18,9 @@ def _add_diagonal(X, scale = 1.0):
     X (np.ndarray) : matrix with modified diagonal 
   """
 
+  if not isinstance(scale, (int, float)):
+    raise TypeError("Scale parameter must be int or float. Got: {0}".format(type(scale)))
+
   X = X + np.eye(X.shape[0]) * scale
 
   return X
@@ -50,7 +53,7 @@ def _calc_nnz_L1_column_variance(X):
 # 2) --- calculate L1 variance
 # substract mean from nonzero elements and take sum of modulus
   sum_abs_diff = np.sum(np.where(X == 0, 0, np.abs(X - col_nnz_mean[None,:])))
-# normalise
+# normalise with number of nonzero elements
   nnz_L1_var = sum_abs_diff / np.sum(X != 0)
 
   return nnz_L1_var
@@ -66,35 +69,42 @@ def _collect_clusters(X):
 # transpose matrix for it is easier to loop over rows
   Xt = X.T
 
-#  --- Read this!
-# each row is the indices of nodes that belong to the same cluster.
-# As a consequence is two rows are not equal they represent to different clusters.
+# indices of nodes
+  node_idcs = np.arange(Xt.shape[0], dtype = np.int)
+
+# Each row contains the indices of nodes that belong to the same cluster.
+# As a consequence, if two rows are not equal they represent to different clusters.
 
 # --- select nonzero rows <-- these are the clusters
   keep_mask = np.sum(Xt, axis = 1) != 0
   nnz_idcs = np.arange(Xt.shape[0])[keep_mask]
+
+# --- no clusters!
+  if nnz_idcs.size == 0:
+    raise ValueError("Cluster matrix is empty")
   
 # --- cluster groups will store the column index of the of the cluster vectors
-  cluster_groups = [nnz_idcs[0]]
+  cluster_groups = [Xt[nnz_idcs[0]]]
+
+# shortcut in case of single cluster
+  if nnz_idcs.size == 1:
+    return {0 : node_idcs[cluster_groups[0] != 0]}
 
 # --- double loop to compare rows
-# @TODO use vector hashing instread
   for idx in nnz_idcs[1:]:
     is_found = False
-    for jdx in len(cluster_groups):
+    for jdx in np.arange(len(cluster_groups), dtype = np.int):
 
-# compare to know cluster nodes
-# @TODO replace with allclose once I updated numpy to 1.14
-      if all(Xt[idx] == Xt[cluster_groups[jdx]]):
+# compare to known clusters
+      if np.allclose(Xt[idx], cluster_groups[jdx]):
         is_found = True
         break
 # append as new cluster if node pattern is not found
     if not is_found:
-      cluster_groups.append(idx)
+      cluster_groups.append(Xt[idx])
 
 # --- collect indices
-  member_idcs = np.arange(Xt.shape[0])
-  clusters = {idx : member_idcs[X[cluster_groups[idx]]] 
+  clusters = {idx : np.ravel(node_idcs[cluster_group != 0])
                 for idx, cluster_group in enumerate(cluster_groups)}
 
   return clusters
@@ -186,7 +196,7 @@ def _markov_cluster(X, expand_power, inflate_power, max_iter, tol, threshold):
     X = _expand(X, expand_power)
     X = _cull(X, threshold)
 
-# check whether the attractors a converged
+# check whether the attractors converged
     avg_col_var = _calc_nnz_L1_column_variance(X)
     if avg_col_var < tol:
       break

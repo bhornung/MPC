@@ -2,14 +2,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>b0ba35f9-798f-4c57-a52b-493b13bcf762</ProjectGuid>
+    <ProjectGuid>325b5b98-b5ff-488b-943d-9628d54fe476</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MC_numpy\test_np_matrix_op.py</StartupFile>
-    <SearchPath>..\RandomGraph</SearchPath>
+    <StartupFile>RandomGraph.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>MPC</Name>
-    <RootNamespace>MPC</RootNamespace>
+    <Name>RandomGraph</Name>
+    <RootNamespace>RandomGraph</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,28 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="c_c_stretcher.py" />
-    <Compile Include="BaseMC\BaseMC.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="HelperUtils\HelperUtils.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MCSparse\MC_sparse.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MC_numpy\MC_numpy.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MC_numpy\test_np_matrix_op.py">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="BaseMC\" />
-    <Folder Include="MC_numpy\" />
-    <Folder Include="HelperUtils\" />
-    <Folder Include="MCSparse\" />
+    <Compile Include="RandomGraph.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

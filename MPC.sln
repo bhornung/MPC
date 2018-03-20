@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "MPC", "MPC\MPC.pyproj", "{B0BA35F9-798F-4C57-A52B-493B13BCF762}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "RandomGraph", "RandomGraph\RandomGraph.pyproj", "{325B5B98-B5FF-488B-943D-9628D54FE476}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B0BA35F9-798F-4C57-A52B-493B13BCF762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B0BA35F9-798F-4C57-A52B-493B13BCF762}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{325B5B98-B5FF-488B-943D-9628D54FE476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{325B5B98-B5FF-488B-943D-9628D54FE476}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
