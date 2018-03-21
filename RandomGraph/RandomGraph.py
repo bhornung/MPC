@@ -13,7 +13,7 @@ def get_adjacency_matrix(g, todense = False):
 
   """
   if todense:
-    return  nx.adjacency_matrix(g).todense()
+    return  np.asarray(nx.adjacency_matrix(g).todense())
   else:
     return nx.adjacency_matrix(g)
 

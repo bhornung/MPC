@@ -61,6 +61,10 @@ class BaseMC(object):
       raise ValueError("tol must be positive")
     self._tol = tol
 
+    if threshold < 0.0:
+      raise ValueError("threshold must be positive")
+    self._threshold = threshold
+
     self._params = {'diag_scale' : self.diag_scale, 
                     'expand_power' : self.expand_power,
                     'inflate_power' : self.inflate_power,

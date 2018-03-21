@@ -26,39 +26,6 @@ def _add_diagonal(X, scale = 1.0):
   return X
 
 #---------------------
-def _calc_nnz_L1_column_variance(X):
-  """
-  Calculates the L1 row variance of matrix of the nonzero elements 
-  where the mean is calculated columnwise.
-  \mu_(j) = \sum_{i} X_{i,j}  / \sum_{i} P(X_{i,j} != 0)
-  Parameters:
-    X (np.ndarray) : 2D square matrix
-  Returns:
-    nnz_L1_var : the average column wise L1 mean of the nonzero elements. 
-
-  """
-# 1) --- calculate column means
-# sum all elements in matrix column wise (zeros too)
-  col_nnz_sum = np.sum(X, axis = 0)
-# count nonzero elements columnwise
-  col_nnz_cnt = np.sum(X != 0, axis = 0)
-
-# check for zero matrix --> this is not supposed to happen
-  if np.sum(col_nnz_cnt) == 0:
-    raise ValueError("Error: zero matrix")
-
-# calculate columnwise mean -- do not divide by zero
-  col_nnz_mean = np.where(col_nnz_cnt == 0, 0, col_nnz_cnt/col_nnz_sum)
-
-# 2) --- calculate L1 variance
-# substract mean from nonzero elements and take sum of modulus
-  sum_abs_diff = np.sum(np.where(X == 0, 0, np.abs(X - col_nnz_mean[None,:])))
-# normalise with number of nonzero elements
-  nnz_L1_var = sum_abs_diff / np.sum(X != 0)
-
-  return nnz_L1_var
-
-#---------------------
 def _collect_clusters(X):
   """
   Collects those column indices together which belong to the same cluster
@@ -130,15 +97,22 @@ def _expand(X, expand_power):
   Raises a square matrix to the expand_power-th power
   Parameters:
     X (np.ndarray) : 2D square matrix
-    expand_power ({int,float}) : power (number) of matrix multiplications
+    expand_power (int) : power (number) of matrix multiplications
   Returns:
     X^{expand_power}
+    diff_ (np.float) : the summed absolute difference between the exponentiated and original matrix
   """
+# only integer steps are accepted
+  if not isinstance(expand_power, int):
+    raise TypeError("expand_power should be of type int. Got: {0}".format(type(expand_power)))
 
 # calculate matrix power
-  X = np.linalg.matrix_power(X, expand_power)
+  Xm = np.linalg.matrix_power(X, expand_power)
 
-  return X
+# check for idempotency
+  diff_ = np.sum(np.abs(Xm-X))
+
+  return Xm, diff_
 
 #----------------------- 
 def _inflate(X, inflate_power):
@@ -150,15 +124,12 @@ def _inflate(X, inflate_power):
   Returns:
     X (np.ndarray) : the elementwise exponentiated matrix
   """
-
-# type check power to avoid possible broadcasting
+# type check powerm in order to avoid possible broadcasting
   if not isinstance(inflate_power, (int, float)):
     raise TypeError("inflate power must be float or int. Got: {0}".format(type(inflate_power)))
 
-# calculate elementwise power in place
-  X.data **= inflate_power
-
-  return X
+# calculate elementwise power 
+  return np.power(X, inflate_power)
 
 #---------------------
 def _init_matrix(X, diag_scale):
@@ -188,17 +159,17 @@ def _markov_cluster(X, expand_power, inflate_power, max_iter, tol, threshold):
     max_iter (int) : maximum number of iterations. 
   """
 
+# --- do maximum max_iter iterations
   for idx in np.arange(max_iter):
 
 # perform one cycle of Markov iteration
     X = _inflate(X, inflate_power)
     X = _row_normalise(X)
-    X = _expand(X, expand_power)
+    X, diff_ = _expand(X, expand_power)
     X = _cull(X, threshold)
 
-# check whether the attractors converged
-    avg_col_var = _calc_nnz_L1_column_variance(X)
-    if avg_col_var < tol:
+# check whether convergence reached <-- matrix is idempotent
+    if diff_ < tol:
       break
 
   return X
@@ -230,8 +201,6 @@ class MCnumpy(BaseMC):
   def __init__(self, diag_scale = 1.0, expand_power = 2, inflate_power = 2, 
                max_iter = 10, threshold = 0.00001, tol = 0.001):
 
-    self.__doc__ = super().__doc__ # sorry I am lazy
-
 # --- invoke parent initialisation
     super().__init__(diag_scale = diag_scale, 
                      expand_power = expand_power, inflate_power = inflate_power,
@@ -254,7 +223,7 @@ class MCnumpy(BaseMC):
 
 # assign labels
     clusters = _collect_clusters(X_)
-    self._labels_ = np.zeros(X_shape[0], dtype = np.int)
+    self._labels_ = np.zeros(X_.shape[0], dtype = np.int)
 
     for _cluster_id, _cluster_members in clusters.items():
       self._labels_[_cluster_members] = _cluster_id

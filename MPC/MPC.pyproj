@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b0ba35f9-798f-4c57-a52b-493b13bcf762</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MC_numpy\test_np_matrix_op.py</StartupFile>
+    <StartupFile>MC_numpy\Tests\test_mc_main.py</StartupFile>
     <SearchPath>..\RandomGraph</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -33,7 +33,13 @@
     <Compile Include="MC_numpy\MC_numpy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MC_numpy\test_np_matrix_op.py">
+    <Compile Include="MC_numpy\Tests\test_mc_main.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MC_numpy\Tests\test_np_matrix_op.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MC_numpy\__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -42,6 +48,7 @@
     <Folder Include="MC_numpy\" />
     <Folder Include="HelperUtils\" />
     <Folder Include="MCSparse\" />
+    <Folder Include="MC_numpy\Tests\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
