@@ -8,7 +8,7 @@ import numpy as np
 from BaseMC.BaseMC import BaseMC
 
 #-----------------------
-def _add_diagonal(X, scale = 1.0):
+def _add_diagonal(X, scale):
   """
   Add scale * identity matrix to a matrix
   Parameters:
@@ -87,10 +87,6 @@ def _cull(X, threshold):
 
   X[X < threshold] = 0.0
 
-  X = _row_normalise(X)
-
-  return X
-
 #-----------------------
 def _expand(X, expand_power):
   """
@@ -136,8 +132,10 @@ def _init_matrix(X, diag_scale):
   """
   Generates a transition matrix from a connectivity matrix
   Parameters:
-    X (np.ndarray[n_col, n_col] : The connectivity matrix a 2D square matrix.
-    diag_scale ({int, float}) : factor to scale the diagonal with. Default 1.0
+    X (np.ndarray[n_col, n_col]) : The connectivity matrix a 2D square matrix.
+    diag_scale ({int, float}) : factor to scale the diagonal with.
+  Returns:`
+    X (np.ndarray[n_col, n_col]) : transition matrix
   """
 
 # --- add self loops
@@ -164,13 +162,17 @@ def _markov_cluster(X, expand_power, inflate_power, max_iter, tol, threshold):
 
 # perform one cycle of Markov iteration
     X = _inflate(X, inflate_power)
+    _cull(X, threshold)
     X = _row_normalise(X)
     X, diff_ = _expand(X, expand_power)
-    X = _cull(X, threshold)
 
 # check whether convergence reached <-- matrix is idempotent
     if diff_ < tol:
       break
+
+# remove small entries, for accurate comparison
+  _cull(X, threshold)
+  _row_normalise(X)
 
   return X
 
