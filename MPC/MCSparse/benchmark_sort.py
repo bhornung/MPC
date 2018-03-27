@@ -60,7 +60,7 @@ def assign_labels_numba(idcs, iptr, labels):
 
 
 #----------------------------------------------------
-def generate_amat(orders, keep_density = 0.1, fill_value = 1):
+def generate_amat(block_sizes, keep_density = 0.1, fill_value = 1):
   """
   Creates a block diagonal sparse adjacency matrix.
   Parameters:
@@ -71,60 +71,108 @@ def generate_amat(orders, keep_density = 0.1, fill_value = 1):
     (scipy.sparse.csr_matrix) : block diagonal sparse matrix
   """
 
-  if not all(map(lambda x: isinstance(x, int), orders)):
+  if not all(map(lambda x: isinstance(x, int), block_sizes)):
     raise TypeError("orders must be of type int")
-  if not all(orders):
+  if not all(block_sizes):
     raise ValueError("orders must be positive")
   if not (keep_density > 0.0) or (keep_density > 1.0):
     raise ValueError("0.0 < keep_density <= 1.0")
 
-# --- calculate total size. Take rounding errors into account
-  n_row = sum(orders)
+# --- calculate total size
+  n_row = sum(block_sizes)
 
-# --- create empty lil matrix
-  adj_mat = sps.lil_matrix((n_row, n_row), dtype = np.int)
+# --- create empty csr matrix
+  adj_mat = sps.csr_matrix((n_row, n_row), dtype = np.int)
 
-  n_row_cum = 0
+# --- number of selected rows
+  n_row_keep = np.int(n_row * keep_density)
 
-# --- loop over blocks
-  for order in orders:
+# select rows to keep
+  row_idcs_keep = np.random.choice(n_row, size = n_row_keep, replace = False)
+  row_idcs_keep.sort() # make sure write happens sequentially
 
-# row indices in block
-    row_idcs = np.arange(n_row_cum, n_row_cum + order)
+# calculate indptr
+  block_sizes_ = np.array(block_sizes)
+  num_elements_in_rows = np.repeat(block_sizes_, block_sizes_)
+  mask = np.full_like(num_elements_in_rows, 0)
+  mask[row_idcs_keep] = 1
+  indptr = np.cumsum(num_elements_in_rows * mask)
 
-# calculate the number of rows that are kept
-    n_keep_rows = int(order * keep_density)
-# choose them randomly
-    keep_rows_idcs = np.random.choice(row_idcs, size = n_keep_rows, replace = False)
-    keep_rows_idcs.sort() # make sure write happens sequentially
+# calculate column indices
+  offset = np.cumsum(np.insert(block_sizes_[:-1], 0, 0))
+  offset = np.repeat(offset, block_sizes_)[row_idcs_keep]
 
-# fill in block
-# add column indices to selected rows
-    dv = [fill_value] * order
-    cv = row_idcs.tolist()
-    for j in keep_rows_idcs:
-      adj_mat.rows[j] = cv
-      adj_mat.data[j] = dv
+  col_idx_ranges = num_elements_in_rows[row_idcs_keep]
+  indices = np.concatenate([np.add(np.arange(x), y) for x, y in zip(col_idx_ranges, offset)])
 
-#    adj_mat.rows[keep_rows_idcs] = [row_idcs.tolist()] * n_keep_rows
-# fill with data
-#    adj_mat.data[keep_rows_idcs] = [[fill_value] * order] * n_keep_rows
+# pass row pointers
+  adj_mat.indptr[1:] = indptr
+# pass column indices
+  adj_mat.indices = indices
+# create data
+  adj_mat.data = np.full_like(adj_mat.indices, fill_value)
 
-# increase cumulative number of rows
-    n_row_cum += order
+  return adj_mat
 
-  return adj_mat #.tocsr()
+# ----------------------------------
+def csr_full_matrix_factory(shapes, fill_value):
+  """
+  Generates a sequences of csr sparse matrices. The matrices are full, but in sparse format, 
+  so that they can easily be processed by sparse matrix constructors.
+  Parameters:
+    shapes (sequence of tuples) : the sequence of shapes
+    fill_value (int) : all matrix elements will have this value
+  Returns:
+    (()) : generator object of length shapes. It generates csr matrices
+  """
+# --- iterate through shapes
+  for nrow, ncol in shapes:
+# create uniform data of the correct number
+    data = np.full((nrow * ncol), fill_value = 1, dtype = np.int)
+# column indices
+    indices = np.tile(np.range(ncol), nrow)
+# number of nonzero elements in the rows
+    indptr = np.arange(nrow + 1, dtype = np.int) * ncol
+# create matrix
+    yield sps.csr_matrix(data, indices, indptr)
 
-orders = [10000,20000,330,333,3333,3333,121,33,888]
+# ----------------------------------
+def create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.01,  keep_each_block = True):
+  """
+  Creates a block diagonal csr matrix.
+  Parameters:
+    block_sizes ([int]) : sizes of the blocks.
+    keep_density (float) : the proportion of rows to be kept. Default 0.01.
+    fill_value (int) : the value of the elements. Default 1.
+    keep_each_block (bool) : whether to keep at least one row from each block. Default True
+  """
 
+  block_sizes_ = np.array(block_sizes, dtype = np.int)
+  n_keep_rows = np.rint(block_sizes_ * keep_density).astype(np.int)
+
+# keep one row from each block all blocks
+  n_keep_rows[n_keep_rows == 0] = 1
+# create shapes
+  shapes = (n_keep_rows, block_sizes_)
+# set up generator for the sequence of matrices
+  matrices = csr_full_matrix_factory(shapes, fill_value)
+
+# create a blockdiagonal matrix by concatenating the blocks
+  adj_mat = sps.block_diag(matrices, format = 'csr', dtype = np.int)
+
+  return adj_mat
+
+block_sizes = list(range(100, 200, 1))
 
 import cProfile, pstats, io
-
 pr = cProfile.Profile()
 pr.enable()
-a = generate_amat(orders, keep_density = 0.2)
+a = create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.1, keep_each_block = True)
 pr.disable()
 
 # --- print profiler results
 pr.create_stats()
 pr.print_stats(sort = 'time')
+
+
+
