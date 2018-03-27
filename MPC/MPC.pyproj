@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b0ba35f9-798f-4c57-a52b-493b13bcf762</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MCSparse\benchmark_sort.py</StartupFile>
+    <StartupFile>RandomSparse\MatrixFactory.py</StartupFile>
     <SearchPath>..\RandomGraph</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -27,7 +27,10 @@
     <Compile Include="HelperUtils\HelperUtils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MCSparse\benchmark_sort.py">
+    <Compile Include="RandomSparse\BlockDiag.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RandomSparse\label_functions.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MCSparse\MC_sparse.py">
@@ -45,6 +48,9 @@
     <Compile Include="MC_numpy\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RandomSparse\MatrixFactory.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="BaseMC\" />
@@ -52,6 +58,7 @@
     <Folder Include="HelperUtils\" />
     <Folder Include="MCSparse\" />
     <Folder Include="MC_numpy\Tests\" />
+    <Folder Include="RandomSparse\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

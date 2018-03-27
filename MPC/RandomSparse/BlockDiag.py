@@ -1,66 +1,8 @@
-"""
-Toy module to figure out efficiency of various functions.
-"""
-
-from functools import wraps
-from itertools import islice
-from collections import defaultdict
-import time
-
-import numpy as np 
-from numba import jit
+import numpy as np
 import scipy.sparse as sps
 
-#-----------------------
-def timefunc(func):
-  """
-  Simple timer.
-  Parameters:
-    func (callable) : function to time.
-  """
-  @wraps(func)
-  def wrap(*args, **kwargs):
-
-     ts = time.time()
-     result = func(*args, **kwargs)
-     te = time.time()
-
-     td = te - ts
-     print("Elapsed time {0}".format(td))
-
-     return result
-  return wrap
-
-@timefunc
-def slc_dd(iptr, idcs):
-  storage = {tuple(islice(idcs, int(x))) : 1 for x in iptr}
-  
-  return storage
-
-import numba 
-
-a = sps.rand(100,100, density = 0.05, format = 'csr')
-
-@numba.jit(nopython=True)
-def assign_labels_numba(idcs, iptr, labels):
-    n_row = iptr.shape[0] - 1
-
-    i_label = 0
-
-    for i in range(n_row):
-        i_start = iptr[i]
-        i_end = iptr[i+1]
-
-        for j in range(i_start, i_end):
-            labels[idcs[j]] = i_label
-
-        i_label += 1
-
-    return labels
-
-
 #----------------------------------------------------
-def generate_amat(block_sizes, keep_density = 0.1, fill_value = 1):
+def create_block_diagonal_matrix_np(block_sizes, keep_density = 0.1, fill_value = 1):
   """
   Creates a block diagonal sparse adjacency matrix.
   Parameters:
@@ -115,29 +57,7 @@ def generate_amat(block_sizes, keep_density = 0.1, fill_value = 1):
   return adj_mat
 
 # ----------------------------------
-def csr_full_matrix_factory(shapes, fill_value):
-  """
-  Generates a sequences of csr sparse matrices. The matrices are full, but in sparse format, 
-  so that they can easily be processed by sparse matrix constructors.
-  Parameters:
-    shapes (sequence of tuples) : the sequence of shapes
-    fill_value (int) : all matrix elements will have this value
-  Returns:
-    (()) : generator object of length shapes. It generates csr matrices
-  """
-# --- iterate through shapes
-  for nrow, ncol in shapes:
-# create uniform data of the correct number
-    data = np.full((nrow * ncol), fill_value = 1, dtype = np.int)
-# column indices
-    indices = np.tile(np.range(ncol), nrow)
-# number of nonzero elements in the rows
-    indptr = np.arange(nrow + 1, dtype = np.int) * ncol
-# create matrix
-    yield sps.csr_matrix(data, indices, indptr)
-
-# ----------------------------------
-def create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.01,  keep_each_block = True):
+def create_block_diagonal_matrix_sps(block_sizes, fill_value = 1, keep_density = 0.01,  keep_each_block = True):
   """
   Creates a block diagonal csr matrix.
   Parameters:
@@ -146,7 +66,7 @@ def create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.0
     fill_value (int) : the value of the elements. Default 1.
     keep_each_block (bool) : whether to keep at least one row from each block. Default True
   """
-
+# number of rows to be kept
   block_sizes_ = np.array(block_sizes, dtype = np.int)
   n_keep_rows = np.rint(block_sizes_ * keep_density).astype(np.int)
 
@@ -162,17 +82,29 @@ def create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.0
 
   return adj_mat
 
-block_sizes = list(range(100, 200, 1))
+# ----------------------------------
+def create_full_csr_matrix_list(shapes, fill_value):
+  """
+  Generates a list of csr sparse matrices. The matrices are full, but in sparse format, 
+  so that they can easily be processed by sparse matrix constructors.
+  Parameters:
+    shapes (sequence of tuples) : the sequence of shapes
+    fill_value (int) : all matrix elements will have this value
+  Returns:
+    matrices [scipy.sparse.csr_matrix]: list of csr matrices
+  """
+  matrices = []
+# --- iterate through shapes
+  for nrow, ncol in shapes:
+# create uniform data of the correct number
+    data = np.full((nrow * ncol), fill_value = 1, dtype = np.int)
+# column indices
+    indices = np.tile(np.range(ncol), nrow)
+# number of nonzero elements in the rows
+    indptr = np.arange(nrow + 1, dtype = np.int) * ncol
+# create matrix
+    matrices.append(sps.csr_matrix(data, indices, indptr))
 
-import cProfile, pstats, io
-pr = cProfile.Profile()
-pr.enable()
-a = create_block_diagonal_matrix(block_sizes, fill_value = 1, keep_density = 0.1, keep_each_block = True)
-pr.disable()
-
-# --- print profiler results
-pr.create_stats()
-pr.print_stats(sort = 'time')
-
+  return matrices
 
 
