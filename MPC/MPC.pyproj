@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b0ba35f9-798f-4c57-a52b-493b13bcf762</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>RandomSparse\MatrixFactory.py</StartupFile>
+    <StartupFile>MCSparse\MCSparse.py</StartupFile>
     <SearchPath>..\RandomGraph</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -20,20 +20,16 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="c_c_stretcher.py" />
     <Compile Include="BaseMC\BaseMC.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="HelperUtils\HelperUtils.py">
+    <Compile Include="MCSparse\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="RandomSparse\BlockDiag.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RandomSparse\label_functions.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MCSparse\MC_sparse.py">
+    <Compile Include="MCSparse\MCSparse.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MC_numpy\MC_numpy.py">
@@ -51,13 +47,28 @@
     <Compile Include="RandomSparse\MatrixFactory.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RandomSparse\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="visual\circo.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="visual\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="BaseMC\" />
     <Folder Include="MC_numpy\" />
-    <Folder Include="HelperUtils\" />
     <Folder Include="MCSparse\" />
     <Folder Include="MC_numpy\Tests\" />
+    <Folder Include="visual\" />
     <Folder Include="RandomSparse\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

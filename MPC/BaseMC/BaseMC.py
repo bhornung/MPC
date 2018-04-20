@@ -13,7 +13,16 @@ class BaseMC(object):
 
     inflate_power {int, float} : the normalising parameter for the transition probabilities. Default 2.
 
+    labels_ (np.ndarray, int) : list of cluster indices.
+
+    mat_list [sps.sparse.csr_matrix] : list of transition matrices over iteration
+
     max_iter (int) : maximum number of iterations. Default 10. max_iter * expand_power is is the total number of Markov steps.
+
+    save_steps (int) : whether to save intermediate transition matrices. Default 0. 
+        0 : do not
+        1 : after each it
+        2 : after each inflation and expansion
 
     threshold (float) : elements below this value will be set to zero. Default 10^{-5}.
 
@@ -27,7 +36,7 @@ class BaseMC(object):
 
 #-----------
   def __init__(self, diag_scale = 1.0, expand_power = 2, inflate_power = 2, 
-               max_iter = 10, threshold = 0.00001, tol = 0.001):
+               max_iter = 10, save_steps = 0, threshold = 0.00001, tol = 0.001):
     """
     Initialises an instance of the Markoc cluster algorithm
     Parameters:
@@ -38,8 +47,8 @@ class BaseMC(object):
       tol (float) : Terminating criterion. If the L1 variance of the nonzero elements fall below tol, the Markov process is terminated. Default 10^{-3}
       """
 
-    if diag_scale <= 0.0:
-      raise ValueError("diag_scale must be positive")
+    if diag_scale < 0.0:
+      raise ValueError("diag_scale must be greater than zero")
     self._diag_scale = diag_scale
 
     if not isinstance(expand_power, int):
@@ -57,6 +66,12 @@ class BaseMC(object):
       raise ValueError("max_iter must be positive")
     self._max_iter = max_iter
 
+    if not isinstance(save_steps, int):
+        raise TypeError("save_steps must be of integer type")
+    if (save_steps < 0) or (save_steps > 2):
+        raise ValueError("save_steps must be 0, 1, 2. Got: {0}".format(save_steps))
+    self._save_steps = save_steps
+
     if tol < 0.0:
       raise ValueError("tol must be positive")
     self._tol = tol
@@ -69,10 +84,13 @@ class BaseMC(object):
                     'expand_power' : self.expand_power,
                     'inflate_power' : self.inflate_power,
                     'max_iter' : self.max_iter,
+                    'save_steps' : self.save_steps,
                     'threshold' : self.threshold,
                     'tol' : self.tol}
 
     self._labels_ = None
+
+    self.mat_list = []
 
   @property
   def diag_scale(self):
@@ -89,6 +107,10 @@ class BaseMC(object):
   @property
   def max_iter(self):
     return self._max_iter
+
+  @property
+  def save_steps(self):
+    return self._save_steps
 
   @property
   def threshold(self):

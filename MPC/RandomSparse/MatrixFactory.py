@@ -2,7 +2,31 @@
 Down the rabbit hole.
 """
 
+import numpy as np
 import scipy.sparse as sps
+
+#--------------------------
+def make_csr_full_matrix(shape, fill_value):
+  """
+  Creates a full csr matrix.
+  Parameters:
+    shape ((int,int)) : shape of the matrix
+    fill_value (int) : matrix elements are set ot this value
+  Returns:
+    (scipy.sparse.csr_matrix()) : sparse matrix filled with the specified value
+  """
+
+# pass shape parameters
+  nrow, ncol = shape
+# create uniform data of the correct number
+  data = np.full((nrow * ncol), fill_value = 1, dtype = np.int)
+# column indices
+  indices = np.tile(np.arange(ncol), nrow)
+# number of nonzero elements in the rows
+  indptr = np.arange(nrow + 1, dtype = np.int) * ncol
+# create matrix
+  return sps.csr_matrix((data, indices, indptr))
+
 
 # ----------------------------------
 class CsrFullMatrixFactory(object):
@@ -20,6 +44,12 @@ class CsrFullMatrixFactory(object):
     fill_value (int) : each element will be set to this value
     """
 # set shapes of matrices
+    try:
+      _ = len(shapes)
+    except Exception as err:
+      print("parameter 'shapes' must implement the '__len__()' method")
+      raise err
+
     self._shapes = shapes
 
 # set value for elements
@@ -48,7 +78,7 @@ class CsrFullMatrixFactory(object):
     while self.ispent < len(self):
     
       _shape = self.shapes[self.ispent]
-      yield self.create_matrix(self, _shape, self.fill_value)
+      yield make_csr_full_matrix(_shape, self.fill_value)
       self.__ispent += 1
 
 # -------
@@ -56,31 +86,4 @@ class CsrFullMatrixFactory(object):
     """
     Define a len method, so that the number of matrices can be known in advance.
     """
-    try:
-      return len(self.shapes)
-    except Exception as err:
-      print("parameter 'shapes' must implement the '__len__()' method")
-      raise err
-
-# -------
-  @staticmethod
-  def create_matrix(shape, fill_value):
-    """
-    Creates a full csr matrix.
-    Parameters:
-      shape ((int,int)) : shape of the matrix
-      fill_value (int) : matrix elements are set ot this value
-    Returns:
-      (scipy.sparse.csr_matrix()) : sparse matrix filled with the specified value
-    """
-
-# pass shape parameters
-    nrow, ncol = shape
-# create uniform data of the correct number
-    data = np.full((nrow * ncol), fill_value = 1, dtype = np.int)
-# column indices
-    indices = np.tile(np.range(ncol), nrow)
-# number of nonzero elements in the rows
-    indptr = np.arange(nrow + 1, dtype = np.int) * ncol
-# create matrix
-    return sps.csr_matrix(data, indices, indptr)
+    return len(self.shapes)
